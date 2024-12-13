@@ -21,7 +21,10 @@ class UnlimitedLoadBalancerGetServiceTest {
         loadBalancer = new UnlimitedLoadBalancer();
     }
 
-    //supposed to be unstable on low iterations
+    /*
+    supposed to be unstable on low iterations as we are basically testing random.
+    possible solution is to seed SecureRandom.
+    */
     @Test
     void test_getService_Random() throws InterruptedException, ExecutionException {
         loadBalancer.register(new ServiceInstance(1L, "service 1"));
