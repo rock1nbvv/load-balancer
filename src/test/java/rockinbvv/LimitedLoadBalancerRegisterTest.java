@@ -11,6 +11,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LimitedLoadBalancerRegisterTest {
 
     @Test
+    public void test_register_duplicate() {
+        ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
+        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10);
+
+        assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
+        assertThat(loadBalancer.register(testInstance)).isEqualTo(false);
+        assertThat(loadBalancer.getAllInstances()).hasSize(1);
+    }
+
+    @Test
     public void test_register() throws Exception {
         int threadCount = 10;
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -58,7 +68,7 @@ class LimitedLoadBalancerRegisterTest {
                         return;
                     }
                     try {
-                        loadBalancer.register(new ServiceInstance(instanceId.getAndIncrement(), "service" + " " + getName()));
+                        loadBalancer.register(new ServiceInstance(instanceId.getAndIncrement(), "service" + " " + i + " " + getName()));
                     } catch (Exception e) {
                         //nothing to do
                     }

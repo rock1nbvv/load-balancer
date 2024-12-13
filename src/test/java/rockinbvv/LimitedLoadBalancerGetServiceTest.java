@@ -12,8 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 class LimitedLoadBalancerGetServiceTest {
 
     LimitedLoadBalancer loadBalancer;
@@ -21,16 +19,6 @@ class LimitedLoadBalancerGetServiceTest {
     @BeforeEach
     void beforeEach() {
         loadBalancer = new LimitedLoadBalancer(10);
-    }
-
-    @Test
-    public void test_register_duplicate() {
-        ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
-        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10);
-
-        assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
-        assertThat(loadBalancer.register(testInstance)).isEqualTo(false);
-        assertThat(loadBalancer.getAllInstances()).hasSize(1);
     }
 
     /*
