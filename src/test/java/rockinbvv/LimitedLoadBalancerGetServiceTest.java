@@ -22,6 +22,7 @@ class LimitedLoadBalancerGetServiceTest {
     void beforeEach() {
         loadBalancer = new LimitedLoadBalancer(10);
     }
+
     @Test
     public void test_register_duplicate() {
         ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
