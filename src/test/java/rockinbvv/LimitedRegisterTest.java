@@ -8,10 +8,10 @@ import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LimitedLoadBalancerRegisterTest {
+class LimitedRegisterTest {
 
     @Test
-    public void test_register_duplicate() {
+    public void registerDuplicateTest() {
         ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
         LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10);
 
@@ -21,7 +21,7 @@ class LimitedLoadBalancerRegisterTest {
     }
 
     @Test
-    public void test_register() throws Exception {
+    public void registerTest() throws Exception {
         int threadCount = 10;
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(threadCount);

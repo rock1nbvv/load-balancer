@@ -3,6 +3,9 @@ package rockinbvv;
 import java.security.SecureRandom;
 import java.util.List;
 
+/**
+ * Due to SecureRandom picks instances uniformly
+ */
 public class RandomBalanceStrategy implements BalanceStrategy {
 
     private final SecureRandom secureRandom = new SecureRandom();

@@ -4,7 +4,6 @@ package rockinbvv;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -23,6 +22,7 @@ public class LimitedLoadBalancer {
     }
 
     private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();
+
     private final Map<BalanceType, BalanceStrategy> strategyMap = Map.ofEntries(
             Map.entry(BalanceType.ROUND_ROBIN, new RoundRobinBalanceStrategy()),
             Map.entry(BalanceType.RANDOM, new RandomBalanceStrategy())
@@ -35,21 +35,16 @@ public class LimitedLoadBalancer {
     public boolean register(ServiceInstance instance) {
         w.lock();
         try {
-            if (instances.size() >= serviceLimit) {
-                throw new IllegalArgumentException("Cannot add more services, limit of " + serviceLimit + " is reached.");
+            if (instances.size() >= serviceLimit || instances.contains(instance)) {
+                return false;
             }
-
-            Optional<ServiceInstance> duplicateInstance = instances.stream().filter(inst -> inst.getAddress().equals(instance.getAddress())).findFirst();
-            if (duplicateInstance.isEmpty()) {
-                return instances.add(instance);
-            }
-            return false;
+            return instances.add(instance);
         } finally {
             w.unlock();
         }
     }
 
-    public ServiceInstance getService(BalanceType type) {
+    public ServiceInstance getInstance(BalanceType type) {
         r.lock();
         try {
             BalanceStrategy balanceStrategy = strategyMap.get(type);

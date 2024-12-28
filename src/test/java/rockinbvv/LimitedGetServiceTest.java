@@ -12,21 +12,23 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-class UnlimitedLoadBalancerGetServiceTest {
+class LimitedGetServiceTest {
 
-    UnlimitedLoadBalancer loadBalancer;
+    LimitedLoadBalancer loadBalancer;
 
     @BeforeEach
     void beforeEach() {
-        loadBalancer = new UnlimitedLoadBalancer();
+        loadBalancer = new LimitedLoadBalancer(10);
     }
 
-    /*
-    supposed to be unstable on low iterations as we are basically testing random.
-    possible solution is to seed SecureRandom.
-    */
     @Test
-    void test_getService_Random() throws InterruptedException, ExecutionException {
+    void getInstanceRandomTest() throws InterruptedException, ExecutionException {
+        /*
+        Supposed to be unstable on low iterations as we are basically testing random.
+        Possible solution is to seed SecureRandom.
+         */
+        int iterationCount = 10;
+
         loadBalancer.register(new ServiceInstance(1L, "service 1"));
         loadBalancer.register(new ServiceInstance(2L, "service 2"));
 
@@ -35,11 +37,12 @@ class UnlimitedLoadBalancerGetServiceTest {
         CompletableFuture<List<ServiceInstance>> t1ResultFuture = new CompletableFuture<>();
         CompletableFuture<List<ServiceInstance>> t2ResultFuture = new CompletableFuture<>();
 
-        new ServiceGetThread("t1", startLatch, endLatch, 10, BalanceType.RANDOM, loadBalancer, t1ResultFuture).start();
-        new ServiceGetThread("t2", startLatch, endLatch, 10, BalanceType.RANDOM, loadBalancer, t2ResultFuture).start();
+        new ServiceGetThread("t1", startLatch, endLatch, iterationCount, BalanceType.RANDOM, loadBalancer, t1ResultFuture).start();
+        new ServiceGetThread("t2", startLatch, endLatch, iterationCount, BalanceType.RANDOM, loadBalancer, t2ResultFuture).start();
         startLatch.countDown();
 
         endLatch.await();
+
         Assertions.assertThat(
                         t1ResultFuture.get().stream()
                                 .collect(Collectors.groupingBy(ServiceInstance::getId))
@@ -58,7 +61,7 @@ class UnlimitedLoadBalancerGetServiceTest {
     }
 
     @Test
-    void test_getService_RoundRobin() throws InterruptedException, ExecutionException {
+    void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
         loadBalancer.register(new ServiceInstance(1L, "service 1"));
         loadBalancer.register(new ServiceInstance(2L, "service 2"));
         loadBalancer.register(new ServiceInstance(3L, "service 3"));
@@ -97,10 +100,10 @@ class UnlimitedLoadBalancerGetServiceTest {
         private final CountDownLatch endLatch;
         private final int iterationCount;
         private final BalanceType balanceType;
-        private final UnlimitedLoadBalancer loadBalancer;
+        private final LimitedLoadBalancer loadBalancer;
         private final CompletableFuture<List<ServiceInstance>> resultFuture;
 
-        public ServiceGetThread(String name, CountDownLatch startLatch, CountDownLatch endLatch, int iterationCount, BalanceType balanceType, UnlimitedLoadBalancer loadBalancer, CompletableFuture<List<ServiceInstance>> resultFuture) {
+        public ServiceGetThread(String name, CountDownLatch startLatch, CountDownLatch endLatch, int iterationCount, BalanceType balanceType, LimitedLoadBalancer loadBalancer, CompletableFuture<List<ServiceInstance>> resultFuture) {
             super(name);
             this.startLatch = startLatch;
             this.endLatch = endLatch;
@@ -119,7 +122,7 @@ class UnlimitedLoadBalancerGetServiceTest {
             }
             List<ServiceInstance> instances = new ArrayList<>();
             for (int i = 0; i < iterationCount; i++) {
-                instances.add(loadBalancer.getService(balanceType));
+                instances.add(loadBalancer.getInstance(balanceType));
             }
             resultFuture.complete(instances);
             endLatch.countDown();

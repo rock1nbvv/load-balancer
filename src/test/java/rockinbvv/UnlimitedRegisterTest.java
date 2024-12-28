@@ -7,10 +7,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class UnlimitedLoadBalancerRegisterTest {
+class UnlimitedRegisterTest {
 
     @Test
-    public void test_register_duplicate() {
+    public void registerDuplicateTest() {
         ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
         UnlimitedLoadBalancer loadBalancer = new UnlimitedLoadBalancer();
 
@@ -20,7 +20,7 @@ class UnlimitedLoadBalancerRegisterTest {
     }
 
     @Test
-    public void test_register_concurrent() throws Exception {
+    public void registerConcurrentTest() throws Exception {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(2);
 
