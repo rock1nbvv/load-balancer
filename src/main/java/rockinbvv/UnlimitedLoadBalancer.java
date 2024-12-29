@@ -9,8 +9,8 @@ public class UnlimitedLoadBalancer {
 
     private final BalanceStrategy balanceStrategy;
 
-    public UnlimitedLoadBalancer(BalanceStrategy balanceStrategy) {
-        this.balanceStrategy = balanceStrategy;
+    public UnlimitedLoadBalancer(BalanceType balanceType) {
+        this.balanceStrategy = balanceType.getStrategy();
     }
 
     public boolean register(ServiceInstance instance) {

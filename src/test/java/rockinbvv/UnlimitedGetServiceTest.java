@@ -23,10 +23,10 @@ class UnlimitedGetServiceTest {
         Possible solution is to seed SecureRandom.
         This particular config passed on 10k times also
          */
-        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
+//        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
         //seed random to increase test stability
-        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
-        loadBalancer = new UnlimitedLoadBalancer(randomBalanceStrategy);
+//        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
+        loadBalancer = new UnlimitedLoadBalancer(BalanceType.RANDOM);
 
         int iterationCount = 15;
 
@@ -62,7 +62,7 @@ class UnlimitedGetServiceTest {
 
     @Test
     void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
-        loadBalancer = new UnlimitedLoadBalancer(new RoundRobinBalanceStrategy());
+        loadBalancer = new UnlimitedLoadBalancer(BalanceType.ROUND_ROBIN);
         loadBalancer.register(new ServiceInstance( "service 1"));
         loadBalancer.register(new ServiceInstance( "service 2"));
         loadBalancer.register(new ServiceInstance("service 3"));

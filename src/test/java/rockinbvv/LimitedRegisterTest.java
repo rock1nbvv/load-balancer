@@ -12,7 +12,7 @@ class LimitedRegisterTest {
 
     @Test
     public void registerDuplicateTest() {
-        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, new RoundRobinBalanceStrategy());
+        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
         ServiceInstance testInstance = new ServiceInstance("0.0.0.0");
 
         assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
@@ -26,7 +26,7 @@ class LimitedRegisterTest {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(threadCount);
 
-        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, new RoundRobinBalanceStrategy());
+        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
 
         IntStream.range(0, threadCount)
                 .mapToObj(i -> new RegisterThread("t" + i, 20, loadBalancer, startLatch, endLatch))

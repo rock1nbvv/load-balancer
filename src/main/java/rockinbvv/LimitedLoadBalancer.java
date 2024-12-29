@@ -17,9 +17,9 @@ public class LimitedLoadBalancer {
     private final int serviceLimit;
     private final BalanceStrategy balanceStrategy;
 
-    public LimitedLoadBalancer(int serviceLimit, BalanceStrategy balanceStrategy) {
+    public LimitedLoadBalancer(int serviceLimit, BalanceType balanceType) {
         this.serviceLimit = serviceLimit;
-        this.balanceStrategy = balanceStrategy;
+        this.balanceStrategy = balanceType.getStrategy();
     }
 
     private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();

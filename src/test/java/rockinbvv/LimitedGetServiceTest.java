@@ -24,11 +24,11 @@ class LimitedGetServiceTest {
         This particular config passed on 10k times
          */
 
-        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
+//        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
         //seed random to increase test stability
-        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
+//        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
 
-        loadBalancer = new LimitedLoadBalancer(10, randomBalanceStrategy);
+        loadBalancer = new LimitedLoadBalancer(10, BalanceType.RANDOM);
 
         int iterationCount = 15;
 
@@ -65,7 +65,7 @@ class LimitedGetServiceTest {
 
     @Test
     void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
-        loadBalancer = new LimitedLoadBalancer(10, new RoundRobinBalanceStrategy());
+        loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
         loadBalancer.register(new ServiceInstance("service 1"));
         loadBalancer.register(new ServiceInstance("service 2"));
         loadBalancer.register(new ServiceInstance("service 3"));
