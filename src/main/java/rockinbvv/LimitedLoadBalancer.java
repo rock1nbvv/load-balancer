@@ -3,7 +3,6 @@ package rockinbvv;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -16,17 +15,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class LimitedLoadBalancer {
 
     private final int serviceLimit;
+    private final BalanceStrategy balanceStrategy;
 
-    public LimitedLoadBalancer(int serviceLimit) {
+    public LimitedLoadBalancer(int serviceLimit, BalanceStrategy balanceStrategy) {
         this.serviceLimit = serviceLimit;
+        this.balanceStrategy = balanceStrategy;
     }
 
     private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();
-
-    private final Map<BalanceType, BalanceStrategy> strategyMap = Map.ofEntries(
-            Map.entry(BalanceType.ROUND_ROBIN, new RoundRobinBalanceStrategy()),
-            Map.entry(BalanceType.RANDOM, new RandomBalanceStrategy())
-    );
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock r = readWriteLock.readLock();
@@ -44,10 +40,9 @@ public class LimitedLoadBalancer {
         }
     }
 
-    public ServiceInstance getInstance(BalanceType type) {
+    public ServiceInstance getInstance() {
         r.lock();
         try {
-            BalanceStrategy balanceStrategy = strategyMap.get(type);
             return balanceStrategy.selectInstance(Collections.unmodifiableList(instances));
         } finally {
             r.unlock();

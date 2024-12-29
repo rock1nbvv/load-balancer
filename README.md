@@ -9,9 +9,3 @@ random and round-robin).
 3. Random balance strategy complies uniform distribution
 4. Each component is able to work in concurrent environment
 5. Tests included
-
-# TODO
-
-1. Cover with tests the following behaviour: LimitedLB + round-robin gets new instance during getting existing ones.
-2. For the sake of encapsulation it seems that balancing strategy should be immutable for specific LB instance.
-3. Seed SecureRandom in tests to increase test stability
