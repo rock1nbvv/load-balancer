@@ -13,7 +13,7 @@ class LimitedRegisterTest {
     @Test
     public void registerDuplicateTest() {
         LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, new RoundRobinBalanceStrategy());
-        ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
+        ServiceInstance testInstance = new ServiceInstance("0.0.0.0");
 
         assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
         assertThat(loadBalancer.register(testInstance)).isEqualTo(false);
@@ -39,8 +39,6 @@ class LimitedRegisterTest {
     }
 
     public static class RegisterThread extends Thread {
-
-        private static final AtomicLong instanceId = new AtomicLong(1);
 
         private final int registrationCount;
         private final LimitedLoadBalancer loadBalancer;
@@ -68,7 +66,7 @@ class LimitedRegisterTest {
                         return;
                     }
                     try {
-                        loadBalancer.register(new ServiceInstance(instanceId.getAndIncrement(), "service" + " " + i + " " + getName()));
+                        loadBalancer.register(new ServiceInstance("service" + " " + i + " " + getName()));
                     } catch (Exception e) {
                         //nothing to do
                     }

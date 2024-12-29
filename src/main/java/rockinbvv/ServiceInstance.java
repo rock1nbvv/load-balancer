@@ -7,17 +7,10 @@ package rockinbvv;
  */
 public class ServiceInstance {
 
-    @Deprecated
-    private final Long id;
     private final String address;
 
-    public ServiceInstance(Long id, String address) {
-        this.id = id;
+    public ServiceInstance(String address) {
         this.address = address;
-    }
-
-    public Long getId() {
-        return this.id;
     }
 
     public String getAddress() {

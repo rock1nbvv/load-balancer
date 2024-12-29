@@ -32,8 +32,8 @@ class LimitedGetServiceTest {
 
         int iterationCount = 15;
 
-        loadBalancer.register(new ServiceInstance(1L, "service 1"));
-        loadBalancer.register(new ServiceInstance(2L, "service 2"));
+        loadBalancer.register(new ServiceInstance("service 1"));
+        loadBalancer.register(new ServiceInstance("service 2"));
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(2);
@@ -48,7 +48,7 @@ class LimitedGetServiceTest {
 
         Assertions.assertThat(
                         t1ResultFuture.get().stream()
-                                .collect(Collectors.groupingBy(ServiceInstance::getId))
+                                .collect(Collectors.groupingBy(ServiceInstance::getAddress))
                                 .entrySet()
                 )
                 .as("Thread 1 should get more than 1 unique instance")
@@ -56,7 +56,7 @@ class LimitedGetServiceTest {
 
         Assertions.assertThat(
                         t2ResultFuture.get().stream()
-                                .collect(Collectors.groupingBy(ServiceInstance::getId))
+                                .collect(Collectors.groupingBy(ServiceInstance::getAddress))
                                 .entrySet()
                 )
                 .as("Thread 2 should get more than 1 unique instance")
@@ -66,9 +66,9 @@ class LimitedGetServiceTest {
     @Test
     void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
         loadBalancer = new LimitedLoadBalancer(10, new RoundRobinBalanceStrategy());
-        loadBalancer.register(new ServiceInstance(1L, "service 1"));
-        loadBalancer.register(new ServiceInstance(2L, "service 2"));
-        loadBalancer.register(new ServiceInstance(3L, "service 3"));
+        loadBalancer.register(new ServiceInstance("service 1"));
+        loadBalancer.register(new ServiceInstance("service 2"));
+        loadBalancer.register(new ServiceInstance("service 3"));
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(1);
@@ -86,15 +86,15 @@ class LimitedGetServiceTest {
                                 t2ResultFuture.get().stream()
                         )
                         .collect(Collectors.toMap(
-                                ServiceInstance::getId,
+                                ServiceInstance::getAddress,
                                 i -> 1,
                                 Math::addExact
                         )),
-                countById -> {
-                    Assertions.assertThat(countById).hasSize(3);
-                    Assertions.assertThat(countById.get(1L)).isEqualTo(2);
-                    Assertions.assertThat(countById.get(2L)).isEqualTo(2);
-                    Assertions.assertThat(countById.get(3L)).isEqualTo(1);
+                countByAddress -> {
+                    Assertions.assertThat(countByAddress).hasSize(3);
+                    Assertions.assertThat(countByAddress.get("service 1")).isEqualTo(2);
+                    Assertions.assertThat(countByAddress.get("service 2")).isEqualTo(2);
+                    Assertions.assertThat(countByAddress.get("service 3")).isEqualTo(1);
                 }
         );
     }

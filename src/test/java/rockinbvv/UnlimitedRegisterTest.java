@@ -11,7 +11,7 @@ class UnlimitedRegisterTest {
 
     @Test
     public void registerDuplicateTest() {
-        ServiceInstance testInstance = new ServiceInstance(1L, "0.0.0.0");
+        ServiceInstance testInstance = new ServiceInstance("0.0.0.0");
         UnlimitedLoadBalancer loadBalancer = new UnlimitedLoadBalancer(new RoundRobinBalanceStrategy());
 
         assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
@@ -37,8 +37,6 @@ class UnlimitedRegisterTest {
 
     public static class RegisterThread extends Thread {
 
-        private static final AtomicLong instanceId = new AtomicLong(1);
-
         private final UnlimitedLoadBalancer loadBalancer;
         private final CountDownLatch startLatch;
         private final CountDownLatch endLatch;
@@ -62,7 +60,7 @@ class UnlimitedRegisterTest {
                     if (interrupted()) {
                         return;
                     }
-                    loadBalancer.register(new ServiceInstance(instanceId.getAndIncrement(), "service" + i + " " + getName()));
+                    loadBalancer.register(new ServiceInstance("service" + i + " " + getName()));
                 }
             } finally {
                 endLatch.countDown();
