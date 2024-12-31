@@ -1,9 +1,10 @@
 package rockinbvv;
 
 import org.junit.jupiter.api.Test;
+import rockinbvv.balancer.LimitedLoadBalancer;
+import rockinbvv.strategy.BalanceType;
 
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,7 +13,7 @@ class LimitedRegisterTest {
 
     @Test
     public void registerDuplicateTest() {
-        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
+        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN.createStrategy());
         ServiceInstance testInstance = new ServiceInstance("0.0.0.0");
 
         assertThat(loadBalancer.register(testInstance)).isEqualTo(true);
@@ -26,7 +27,7 @@ class LimitedRegisterTest {
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(threadCount);
 
-        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
+        LimitedLoadBalancer loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN.createStrategy());
 
         IntStream.range(0, threadCount)
                 .mapToObj(i -> new RegisterThread("t" + i, 20, loadBalancer, startLatch, endLatch))

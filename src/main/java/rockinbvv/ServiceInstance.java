@@ -6,7 +6,7 @@ package rockinbvv;
  * So that hashCode()/equals() contract fully relies on comparing address fields of instances
  */
 public class ServiceInstance {
-
+//todo increase coverage
     private final String address;
 
     public ServiceInstance(String address) {

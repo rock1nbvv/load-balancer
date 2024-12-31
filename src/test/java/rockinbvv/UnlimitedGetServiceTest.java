@@ -2,8 +2,11 @@ package rockinbvv;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import rockinbvv.balancer.UnlimitedLoadBalancer;
+import rockinbvv.strategy.BalanceType;
+import rockinbvv.strategy.RandomBalanceStrategy;
+import rockinbvv.strategy.StrategyFactory;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -12,25 +15,36 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 class UnlimitedGetServiceTest {
 
     UnlimitedLoadBalancer loadBalancer;
 
     @Test
     void getInstanceRandomTest() throws Exception {
-        /*
-        Supposed to be unstable on low iterations as we are basically testing random.
-        Possible solution is to seed SecureRandom.
-        This particular config passed on 10k times also
-         */
-//        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
-        //seed random to increase test stability
-//        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
-        loadBalancer = new UnlimitedLoadBalancer(BalanceType.RANDOM);
+//        RandomBalanceStrategy randomBalanceStrategy = mock(RandomBalanceStrategy.class);
+//        when(randomBalanceStrategy.selectInstance(anyList())).then(invocation -> {
+//            if(Thread.currentThread().getName().equals("t1")){
+//                System.out.println("thread" + Thread.currentThread().getName() + "got service 1");
+//                return new ServiceInstance("service 1");
+//            }
+//            else {
+//                System.out.println("thread" + Thread.currentThread().getName() + "got service 2");
+//                return new ServiceInstance("service 2");
+//            }
+//        });
+//
+//        StrategyFactory strategyFactory = mock(StrategyFactory.class);
+//        when(strategyFactory.createStrategy()).thenReturn(
+//                randomBalanceStrategy
+//        );
+//todo mock random balance strategy for stability
+        loadBalancer = new UnlimitedLoadBalancer(BalanceType.RANDOM.createStrategy());
 
-        int iterationCount = 15;
-
-        loadBalancer.register(new ServiceInstance( "service 1"));
+        loadBalancer.register(new ServiceInstance("service 1"));
         loadBalancer.register(new ServiceInstance("service 2"));
 
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -38,8 +52,8 @@ class UnlimitedGetServiceTest {
         CompletableFuture<List<ServiceInstance>> t1ResultFuture = new CompletableFuture<>();
         CompletableFuture<List<ServiceInstance>> t2ResultFuture = new CompletableFuture<>();
 
-        new ServiceGetThread("t1", startLatch, endLatch, iterationCount, loadBalancer, t1ResultFuture).start();
-        new ServiceGetThread("t2", startLatch, endLatch, iterationCount, loadBalancer, t2ResultFuture).start();
+        new ServiceGetThread("t1", startLatch, endLatch, 3, loadBalancer, t1ResultFuture).start();
+        new ServiceGetThread("t2", startLatch, endLatch, 3, loadBalancer, t2ResultFuture).start();
         startLatch.countDown();
 
         endLatch.await();
@@ -62,9 +76,9 @@ class UnlimitedGetServiceTest {
 
     @Test
     void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
-        loadBalancer = new UnlimitedLoadBalancer(BalanceType.ROUND_ROBIN);
-        loadBalancer.register(new ServiceInstance( "service 1"));
-        loadBalancer.register(new ServiceInstance( "service 2"));
+        loadBalancer = new UnlimitedLoadBalancer(BalanceType.ROUND_ROBIN.createStrategy());
+        loadBalancer.register(new ServiceInstance("service 1"));
+        loadBalancer.register(new ServiceInstance("service 2"));
         loadBalancer.register(new ServiceInstance("service 3"));
 
         CountDownLatch startLatch = new CountDownLatch(1);

@@ -1,5 +1,9 @@
-package rockinbvv;
+package rockinbvv.balancer;
 
+
+import rockinbvv.ServiceInstance;
+import rockinbvv.strategy.BalanceStrategy;
+import rockinbvv.strategy.BalanceType;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,14 +16,14 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * I have picked CopyOnWriteArrayList as for this task we should focus on slow writes since services are not supposed
  * to register to often and fast reads to get them fast and often
  */
-public class LimitedLoadBalancer {
+public class LimitedLoadBalancer implements LoadBalancer {
 
     private final int serviceLimit;
     private final BalanceStrategy balanceStrategy;
 
-    public LimitedLoadBalancer(int serviceLimit, BalanceType balanceType) {
+    public LimitedLoadBalancer(int serviceLimit, BalanceStrategy balanceStrategy) {
         this.serviceLimit = serviceLimit;
-        this.balanceStrategy = balanceType.getStrategy();
+        this.balanceStrategy = balanceStrategy;
     }
 
     private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();
@@ -28,6 +32,7 @@ public class LimitedLoadBalancer {
     private final Lock r = readWriteLock.readLock();
     private final Lock w = readWriteLock.writeLock();
 
+    @Override
     public boolean register(ServiceInstance instance) {
         w.lock();
         try {
@@ -40,6 +45,7 @@ public class LimitedLoadBalancer {
         }
     }
 
+    @Override
     public ServiceInstance getInstance() {
         r.lock();
         try {
@@ -49,6 +55,7 @@ public class LimitedLoadBalancer {
         }
     }
 
+    @Override
     public List<ServiceInstance> getAllInstances() {
         r.lock();
         try {

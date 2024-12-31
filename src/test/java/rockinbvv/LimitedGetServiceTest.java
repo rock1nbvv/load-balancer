@@ -2,8 +2,9 @@ package rockinbvv;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import rockinbvv.balancer.LimitedLoadBalancer;
+import rockinbvv.strategy.BalanceType;
 
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -18,17 +19,8 @@ class LimitedGetServiceTest {
 
     @Test
     void getInstanceRandomTest() throws Exception {
-        /*
-        Supposed to be unstable on low iterations as we are basically testing random.
-        Possible solution is to seed SecureRandom.
-        This particular config passed on 10k times
-         */
-
-//        RandomBalanceStrategy randomBalanceStrategy = new RandomBalanceStrategy();
-        //seed random to increase test stability
-//        ReflectionUtils.setBalanceStrategyFiled(randomBalanceStrategy, "secureRandom", new SecureRandom(SecureRandom.getSeed(123)));
-
-        loadBalancer = new LimitedLoadBalancer(10, BalanceType.RANDOM);
+        //todo mock random balance strategy for stability
+        loadBalancer = new LimitedLoadBalancer(10, BalanceType.RANDOM.createStrategy());
 
         int iterationCount = 15;
 
@@ -65,7 +57,7 @@ class LimitedGetServiceTest {
 
     @Test
     void getInstanceRoundRobinTest() throws InterruptedException, ExecutionException {
-        loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN);
+        loadBalancer = new LimitedLoadBalancer(10, BalanceType.ROUND_ROBIN.createStrategy());
         loadBalancer.register(new ServiceInstance("service 1"));
         loadBalancer.register(new ServiceInstance("service 2"));
         loadBalancer.register(new ServiceInstance("service 3"));

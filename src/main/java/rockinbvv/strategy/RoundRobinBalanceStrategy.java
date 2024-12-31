@@ -1,4 +1,6 @@
-package rockinbvv;
+package rockinbvv.strategy;
+
+import rockinbvv.ServiceInstance;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
