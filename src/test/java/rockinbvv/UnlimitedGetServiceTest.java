@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,27 +26,14 @@ class UnlimitedGetServiceTest {
 
     @Test
     void getInstanceRandomTest() throws Exception {
-//        RandomBalanceStrategy randomBalanceStrategy = mock(RandomBalanceStrategy.class);
-//        when(randomBalanceStrategy.selectInstance(anyList())).then(invocation -> {
-//            if(Thread.currentThread().getName().equals("t1")){
-//                System.out.println("thread" + Thread.currentThread().getName() + "got service 1");
-//                return new ServiceInstance("service 1");
-//            }
-//            else {
-//                System.out.println("thread" + Thread.currentThread().getName() + "got service 2");
-//                return new ServiceInstance("service 2");
-//            }
-//        });
-//
-//        StrategyFactory strategyFactory = mock(StrategyFactory.class);
-//        when(strategyFactory.createStrategy()).thenReturn(
-//                randomBalanceStrategy
-//        );
-//todo mock random balance strategy for stability
-        loadBalancer = new UnlimitedLoadBalancer(BalanceType.RANDOM.createStrategy());
+        List<ServiceInstance> serviceInstances = List.of(new ServiceInstance("service 1"), new ServiceInstance("service 2"));
 
-        loadBalancer.register(new ServiceInstance("service 1"));
-        loadBalancer.register(new ServiceInstance("service 2"));
+        StrategyFactory strategyFactory = mockStrategyFactory(serviceInstances);
+
+        loadBalancer = new UnlimitedLoadBalancer(strategyFactory.createStrategy());
+
+        loadBalancer.register(serviceInstances.get(0));
+        loadBalancer.register(serviceInstances.get(1));
 
         CountDownLatch startLatch = new CountDownLatch(1);
         CountDownLatch endLatch = new CountDownLatch(2);
@@ -72,6 +60,26 @@ class UnlimitedGetServiceTest {
                 )
                 .as("Thread 2 should get more than 1 unique instance")
                 .hasSizeGreaterThan(1);
+    }
+
+    private StrategyFactory mockStrategyFactory(List<ServiceInstance> serviceInstances) {
+        AtomicInteger t1Counter = new AtomicInteger();
+        AtomicInteger t2Counter = new AtomicInteger(1);
+
+        RandomBalanceStrategy randomBalanceStrategy = mock(RandomBalanceStrategy.class);
+        when(randomBalanceStrategy.selectInstance(anyList())).then(invocation -> {
+            if (Thread.currentThread().getName().equals("t1")) {
+                return serviceInstances.get(t1Counter.getAndIncrement() % 2);
+            } else {
+                return serviceInstances.get(t2Counter.getAndIncrement() % 2);
+            }
+        });
+
+        StrategyFactory strategyFactory = mock(StrategyFactory.class);
+        when(strategyFactory.createStrategy()).thenReturn(
+                randomBalanceStrategy
+        );
+        return strategyFactory;
     }
 
     @Test

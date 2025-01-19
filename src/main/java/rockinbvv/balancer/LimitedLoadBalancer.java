@@ -3,7 +3,6 @@ package rockinbvv.balancer;
 
 import rockinbvv.ServiceInstance;
 import rockinbvv.strategy.BalanceStrategy;
-import rockinbvv.strategy.BalanceType;
 
 import java.util.Collections;
 import java.util.List;
@@ -26,6 +25,7 @@ public class LimitedLoadBalancer implements LoadBalancer {
         this.balanceStrategy = balanceStrategy;
     }
 
+    //todo should move to concurrent hashmap for clarity
     private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
