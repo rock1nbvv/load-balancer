@@ -4,9 +4,9 @@ package rockinbvv.balancer;
 import rockinbvv.ServiceInstance;
 import rockinbvv.strategy.BalanceStrategy;
 
-import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -20,48 +20,70 @@ public class LimitedLoadBalancer implements LoadBalancer {
     private final int serviceLimit;
     private final BalanceStrategy balanceStrategy;
 
+    /**
+     * Constructs a LimitedLoadBalancer with the given service limit and balance strategy.
+     *
+     * @param serviceLimit    the maximum number of service instances that can be registered
+     * @param balanceStrategy the strategy used to select an instance
+     */
     public LimitedLoadBalancer(int serviceLimit, BalanceStrategy balanceStrategy) {
         this.serviceLimit = serviceLimit;
         this.balanceStrategy = balanceStrategy;
     }
 
-    //todo should move to concurrent hashmap for clarity
-    private final List<ServiceInstance> instances = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<String, ServiceInstance> instances = new ConcurrentHashMap<>();
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final Lock r = readWriteLock.readLock();
-    private final Lock w = readWriteLock.writeLock();
+    private final Lock readLock = readWriteLock.readLock();
+    private final Lock writeLock = readWriteLock.writeLock();
 
+    /**
+     * Registers a service instance if the limit has not been reached and the instance is not already registered.
+     *
+     * @param instance the service instance to register
+     * @return true if the instance was successfully registered, false otherwise
+     */
     @Override
     public boolean register(ServiceInstance instance) {
-        w.lock();
+        writeLock.lock();
         try {
             if (instances.size() >= serviceLimit || instances.contains(instance)) {
                 return false;
             }
-            return instances.add(instance);
+            instances.put(instance.getAddress(), instance);
+            return true;
         } finally {
-            w.unlock();
+            writeLock.unlock();
         }
     }
 
+    /**
+     * Retrieves an instance using the balance strategy.
+     *
+     * @return the selected service instance
+     */
     @Override
     public ServiceInstance getInstance() {
-        r.lock();
+        readLock.lock();
         try {
-            return balanceStrategy.selectInstance(Collections.unmodifiableList(instances));
+            return balanceStrategy.selectInstance(instances.values().stream().sorted(Comparator.comparing(ServiceInstance::getAddress)).toList());
         } finally {
-            r.unlock();
+            readLock.unlock();
         }
     }
 
+    /**
+     * Returns a list of all registered service instances.
+     *
+     * @return a list of all service instances
+     */
     @Override
     public List<ServiceInstance> getAllInstances() {
-        r.lock();
+        readLock.lock();
         try {
-            return instances.stream().toList();
+            return instances.values().stream().sorted(Comparator.comparing(ServiceInstance::getAddress)).toList();
         } finally {
-            r.unlock();
+            readLock.unlock();
         }
     }
 }
